@@ -1,70 +1,71 @@
 import java.util.LinkedList;
 import java.util.Queue;
-
-// Reservation class (represents booking request)
 class Reservation {
-    private String guestName;
-    private String roomType;
+    String guestName;
+    String roomType;
 
     public Reservation(String guestName, String roomType) {
         this.guestName = guestName;
         this.roomType = roomType;
     }
+}
 
-    public String getGuestName() {
-        return guestName;
+class RoomInventory {
+    String roomType;
+    int availableRooms;
+    int roomCounter = 1;
+
+    public RoomInventory(String roomType, int availableRooms) {
+        this.roomType = roomType;
+        this.availableRooms = availableRooms;
     }
 
-    public String getRoomType() {
-        return roomType;
+    // Allocate room
+    public String allocateRoom() {
+        if (availableRooms > 0) {
+            String roomId = roomType + "-" + roomCounter;
+            roomCounter++;
+            availableRooms--;
+            return roomId;
+        }
+        return null;
     }
 }
 
-// Booking Queue class (FIFO handling)
-class BookingRequestQueue {
-    private Queue<Reservation> queue;
 
-    public BookingRequestQueue() {
-        queue = new LinkedList<>();
-    }
-
-    // Add booking request
-    public void addRequest(Reservation reservation) {
-        queue.offer(reservation);
-    }
-
-    // Check if queue has requests
-    public boolean hasPendingRequests() {
-        return !queue.isEmpty();
-    }
-
-    // Process next request (FIFO)
-    public Reservation getNextRequest() {
-        return queue.poll();
-    }
-}
-
-// Main class
 public class BookMyStayApp {
     public static void main(String[] args) {
 
-        BookingRequestQueue bookingQueue = new BookingRequestQueue();
+        System.out.println("Room Allocation Processing");
 
-        // Add booking requests (arrival order)
-        bookingQueue.addRequest(new Reservation("Abhi", "Single"));
-        bookingQueue.addRequest(new Reservation("Subha", "Double"));
-        bookingQueue.addRequest(new Reservation("Vanmathi", "Suite"));
+        Queue<Reservation> bookingQueue = new LinkedList<>();
+        bookingQueue.add(new Reservation("Abhi", "Single"));
+        bookingQueue.add(new Reservation("Subha", "Single"));
+        bookingQueue.add(new Reservation("Vanmathi", "Suite"));
 
-        System.out.println("Booking Request Queue");
+        RoomInventory single = new RoomInventory("Single", 5);
+        RoomInventory dbl = new RoomInventory("Double", 3);
+        RoomInventory suite = new RoomInventory("Suite", 2);
 
-        // Process requests in FIFO order
-        while (bookingQueue.hasPendingRequests()) {
-            Reservation request = bookingQueue.getNextRequest();
 
-            System.out.println("Processing booking for Guest: "
-                    + request.getGuestName()
-                    + ", Room Type: "
-                    + request.getRoomType());
+        while (!bookingQueue.isEmpty()) {
+            Reservation r = bookingQueue.poll();
+            String roomId = null;
+
+            if (r.roomType.equalsIgnoreCase("Single")) {
+                roomId = single.allocateRoom();
+            } else if (r.roomType.equalsIgnoreCase("Double")) {
+                roomId = dbl.allocateRoom();
+            } else if (r.roomType.equalsIgnoreCase("Suite")) {
+                roomId = suite.allocateRoom();
+            }
+
+            if (roomId != null) {
+                System.out.println("Booking confirmed for Guest: "
+                        + r.guestName + ", Room ID: " + roomId);
+            } else {
+                System.out.println("No rooms available for Guest: " + r.guestName);
+            }
         }
     }
 }
