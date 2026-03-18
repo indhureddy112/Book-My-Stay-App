@@ -16,6 +16,7 @@ abstract class Room {
     }
 }
 
+// Room Types
 class SingleRoom extends Room {
     public SingleRoom() {
         super(1, 250, 1500.0);
@@ -34,6 +35,7 @@ class SuiteRoom extends Room {
     }
 }
 
+// Inventory (State Holder)
 class RoomInventory {
     Room room;
     int availableRooms;
@@ -42,26 +44,48 @@ class RoomInventory {
         this.room = room;
         this.availableRooms = availableRooms;
     }
+}
 
-    public void displayInventory(String roomType) {
-        System.out.println(roomType + ":");
-        room.displayRoomDetails();
-        System.out.println("Available Rooms: " + availableRooms);
-        System.out.println();
+// Search Service (READ-ONLY)
+class RoomSearchService {
+
+    public static void searchRooms(RoomInventory[] inventoryList) {
+
+        System.out.println("Room Search\n");
+
+        for (RoomInventory inv : inventoryList) {
+
+            // Only show available rooms (validation)
+            if (inv.availableRooms > 0) {
+
+                if (inv.room instanceof SingleRoom) {
+                    System.out.println("Single Room:");
+                } else if (inv.room instanceof DoubleRoom) {
+                    System.out.println("Double Room:");
+                } else if (inv.room instanceof SuiteRoom) {
+                    System.out.println("Suite Room:");
+                }
+
+                inv.room.displayRoomDetails();
+                System.out.println("Available: " + inv.availableRooms);
+                System.out.println();
+            }
+        }
     }
 }
 
-public class BookMyStayApp {
+// Main Class
+public class BookMyStayApp{
     public static void main(String[] args) {
 
-        System.out.println("Hotel Room Inventory Status\n");
+        // Centralized inventory (same as Use Case 3)
+        RoomInventory[] inventory = {
+                new RoomInventory(new SingleRoom(), 5),
+                new RoomInventory(new DoubleRoom(), 3),
+                new RoomInventory(new SuiteRoom(), 2)
+        };
 
-        RoomInventory single = new RoomInventory(new SingleRoom(), 5);
-        RoomInventory dbl = new RoomInventory(new DoubleRoom(), 3);
-        RoomInventory suite = new RoomInventory(new SuiteRoom(), 2);
-
-        single.displayInventory("Single Room");
-        dbl.displayInventory("Double Room");
-        suite.displayInventory("Suite Room");
+        // Perform search (READ ONLY)
+        RoomSearchService.searchRooms(inventory);
     }
 }
