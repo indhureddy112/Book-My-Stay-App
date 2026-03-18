@@ -1,7 +1,10 @@
+import java.io.*;
 import java.util.*;
 
-// Shared Inventory Class
-class Inventory {
+// Inventory class (Serializable for persistence)
+class Inventory implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private Map<String, Integer> rooms;
 
     public Inventory() {
@@ -11,77 +14,63 @@ class Inventory {
         rooms.put("Suite", 2);
     }
 
-    // Synchronized method (critical section)
-    public synchronized String bookRoom(String guest, String type) {
-        if (rooms.get(type) > 0) {
-            int count = rooms.get(type);
-            rooms.put(type, count - 1);
-
-            String roomId = type + "-" + (count);
-            System.out.println("Booking confirmed for Guest: " + guest + ", Room ID: " + roomId);
-            return roomId;
-        } else {
-            System.out.println("No rooms available for " + type);
-            return null;
-        }
+    public Map<String, Integer> getRooms() {
+        return rooms;
     }
 
     public void displayInventory() {
-        System.out.println("\nRemaining Inventory:");
+        System.out.println("\nCurrent Inventory:");
         for (String key : rooms.keySet()) {
             System.out.println(key + ": " + rooms.get(key));
         }
     }
 }
 
-// Booking Task (Thread)
-class BookingTask extends Thread {
-    private Inventory inventory;
-    private String guest;
-    private String type;
+// Persistence Service
+class PersistenceService {
 
-    public BookingTask(Inventory inventory, String guest, String type) {
-        this.inventory = inventory;
-        this.guest = guest;
-        this.type = type;
+    private static final String FILE_NAME = "inventory.dat";
+
+    // Save inventory to file
+    public static void saveInventory(Inventory inventory) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {
+            oos.writeObject(inventory);
+            System.out.println("Inventory saved successfully.");
+        } catch (IOException e) {
+            System.out.println("Error saving inventory.");
+        }
     }
 
-    public void run() {
-        inventory.bookRoom(guest, type);
+    // Load inventory from file
+    public static Inventory loadInventory() {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(FILE_NAME))) {
+            return (Inventory) ois.readObject();
+        } catch (Exception e) {
+            return null; // File missing or corrupted
+        }
     }
 }
 
-// Main Class
-public class BookMyStayApp {
+// Main class
+public class  BookMyStayApp{
     public static void main(String[] args) {
 
-        System.out.println("Concurrent Booking Simulation\n");
+        System.out.println("System Recovery");
 
-        Inventory inventory = new Inventory();
+        // Try loading existing data
+        Inventory inventory = PersistenceService.loadInventory();
 
-        // Simulated concurrent bookings
-        Thread t1 = new BookingTask(inventory, "Abhi", "Single");
-        Thread t2 = new BookingTask(inventory, "Vanmathi", "Double");
-        Thread t3 = new BookingTask(inventory, "Kunal", "Suite");
-        Thread t4 = new BookingTask(inventory, "Subha", "Single");
-
-        // Start threads
-        t1.start();
-        t2.start();
-        t3.start();
-        t4.start();
-
-        // Wait for all threads to finish
-        try {
-            t1.join();
-            t2.join();
-            t3.join();
-            t4.join();
-        } catch (InterruptedException e) {
-            System.out.println("Thread execution interrupted.");
+        if (inventory == null) {
+            System.out.println("No valid inventory data found. Starting fresh.");
+            inventory = new Inventory();
+        } else {
+            System.out.println("Inventory restored successfully.");
         }
 
-        // Display remaining inventory
+        // Display current inventory
         inventory.displayInventory();
+
+        // Save inventory before shutdown
+        PersistenceService.saveInventory(inventory);
     }
 }
