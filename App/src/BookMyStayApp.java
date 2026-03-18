@@ -1,91 +1,70 @@
-abstract class Room {
-    protected int numberOfBeds;
-    protected int squareFeet;
-    protected double pricePerNight;
+import java.util.LinkedList;
+import java.util.Queue;
 
-    public Room(int numberOfBeds, int squareFeet, double pricePerNight) {
-        this.numberOfBeds = numberOfBeds;
-        this.squareFeet = squareFeet;
-        this.pricePerNight = pricePerNight;
+// Reservation class (represents booking request)
+class Reservation {
+    private String guestName;
+    private String roomType;
+
+    public Reservation(String guestName, String roomType) {
+        this.guestName = guestName;
+        this.roomType = roomType;
     }
 
-    public void displayRoomDetails() {
-        System.out.println("Beds: " + numberOfBeds);
-        System.out.println("Size: " + squareFeet + " sqft");
-        System.out.println("Price per night: " + pricePerNight);
+    public String getGuestName() {
+        return guestName;
     }
-}
 
-// Room Types
-class SingleRoom extends Room {
-    public SingleRoom() {
-        super(1, 250, 1500.0);
+    public String getRoomType() {
+        return roomType;
     }
 }
 
-class DoubleRoom extends Room {
-    public DoubleRoom() {
-        super(2, 400, 2500.0);
+// Booking Queue class (FIFO handling)
+class BookingRequestQueue {
+    private Queue<Reservation> queue;
+
+    public BookingRequestQueue() {
+        queue = new LinkedList<>();
+    }
+
+    // Add booking request
+    public void addRequest(Reservation reservation) {
+        queue.offer(reservation);
+    }
+
+    // Check if queue has requests
+    public boolean hasPendingRequests() {
+        return !queue.isEmpty();
+    }
+
+    // Process next request (FIFO)
+    public Reservation getNextRequest() {
+        return queue.poll();
     }
 }
 
-class SuiteRoom extends Room {
-    public SuiteRoom() {
-        super(3, 750, 5000.0);
-    }
-}
-
-// Inventory (State Holder)
-class RoomInventory {
-    Room room;
-    int availableRooms;
-
-    public RoomInventory(Room room, int availableRooms) {
-        this.room = room;
-        this.availableRooms = availableRooms;
-    }
-}
-
-// Search Service (READ-ONLY)
-class RoomSearchService {
-
-    public static void searchRooms(RoomInventory[] inventoryList) {
-
-        System.out.println("Room Search\n");
-
-        for (RoomInventory inv : inventoryList) {
-
-            // Only show available rooms (validation)
-            if (inv.availableRooms > 0) {
-
-                if (inv.room instanceof SingleRoom) {
-                    System.out.println("Single Room:");
-                } else if (inv.room instanceof DoubleRoom) {
-                    System.out.println("Double Room:");
-                } else if (inv.room instanceof SuiteRoom) {
-                    System.out.println("Suite Room:");
-                }
-
-                inv.room.displayRoomDetails();
-                System.out.println("Available: " + inv.availableRooms);
-                System.out.println();
-            }
-        }
-    }
-}
-
-// Main Class
-public class BookMyStayApp{
+// Main class
+public class BookMyStayApp {
     public static void main(String[] args) {
 
-        // Centralized inventory (same as Use Case 3)
-        RoomInventory[] inventory = {
-                new RoomInventory(new SingleRoom(), 5),
-                new RoomInventory(new DoubleRoom(), 3),
-                new RoomInventory(new SuiteRoom(), 2)
-        };
+        BookingRequestQueue bookingQueue = new BookingRequestQueue();
 
-        // Perform search (READ ONLY)
-        RoomSearchService.searchRooms(inventory);
+        // Add booking requests (arrival order)
+        bookingQueue.addRequest(new Reservation("Abhi", "Single"));
+        bookingQueue.addRequest(new Reservation("Subha", "Double"));
+        bookingQueue.addRequest(new Reservation("Vanmathi", "Suite"));
+
+        System.out.println("Booking Request Queue");
+
+        // Process requests in FIFO order
+        while (bookingQueue.hasPendingRequests()) {
+            Reservation request = bookingQueue.getNextRequest();
+
+            System.out.println("Processing booking for Guest: "
+                    + request.getGuestName()
+                    + ", Room Type: "
+                    + request.getRoomType());
+        }
     }
 }
